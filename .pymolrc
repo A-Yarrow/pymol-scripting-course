@@ -1,4 +1,0 @@
-bg_color white
-set ray_opaque_background, off
-set stick_radius, 0.2
-set cartoon_transparency, 0.1
