@@ -11,6 +11,18 @@ logfile = open(log_path, "w")
 sys.stdout = logfile
 sys.stderr = logfile
 """
+
+# Set up Custom Color Palette
+# https://color.adobe.com/color-name_LG-color-theme-19646985/
+# https://pmc.ncbi.nlm.nih.gov/articles/PMC9377702/#j_jib-2022-0016_fig_001
+def pymol_colors():
+    cmd.set_color('light_grey', [211/255.0, 211/255.0, 211/255.0])
+    cmd.set_color('LG1', [247/255.0, 207/255.0, 150/255.0])
+    cmd.set_color('LG2', [226/255.0, 176/255.0, 106/255.0])
+    cmd.set_color('LG3', [198/255.0, 187/255.0, 201/255.0])
+    cmd.set_color('LG4', [36/255.0,  160/255.0, 152/255.0])
+    cmd.set_color('LG5', [91/255.0,  211/255.0, 203/255.0])
+
 def pymol_display_settings():
     """
     Function to set up custom PyMOL settings.
@@ -19,6 +31,7 @@ def pymol_display_settings():
     print("Loading custom PyMOL settings...", flush=True)
 
     # ==== PyMOL Settings ====
+    pymol_colors() # Load custom colors
     cmd.set('use_shaders', 0) # Disable shaders
     cmd.set('cartoon_gap_cutoff', 0) # Don't show dashes in cartoon)
     cmd.set('seq_view', 1) #Turn on the sequence view
@@ -43,17 +56,6 @@ def pymol_render_settings():
     cmd.set('ray_shadows', 1)
     cmd.set('ray_trace_gain', 0.1)
     cmd.set('antialias', 2)
-
-# Set up Custom Color Palette
-# https://color.adobe.com/color-name_LG-color-theme-19646985/
-# https://pmc.ncbi.nlm.nih.gov/articles/PMC9377702/#j_jib-2022-0016_fig_001
-def pymol_colors():
-    cmd.set_color('light_grey', [211/255.0, 211/255.0, 211/255.0])
-    cmd.set_color('LG1', [247/255.0, 207/255.0, 150/255.0])
-    cmd.set_color('LG2', [226/255.0, 176/255.0, 106/255.0])
-    cmd.set_color('LG3', [198/255.0, 187/255.0, 201/255.0])
-    cmd.set_color('LG4', [36/255.0,  160/255.0, 152/255.0])
-    cmd.set_color('LG5', [91/255.0,  211/255.0, 203/255.0])
 
 #Custom color protein chains
 def get_protein_chains(obj_name):
