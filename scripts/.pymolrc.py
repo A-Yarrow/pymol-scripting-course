@@ -54,7 +54,7 @@ def pymol_display_settings():
 def pymol_render_settings():
     cmd.set('ray_trace_mode', 0)
     cmd.set('ray_shadows', 1)
-    cmd.set('ray_trace_gain', 0.1)
+    cmd.set('ray_trace_gain', 0.1) #Only used when ray_trace mode is 1-3 but here as a placeholder
     cmd.set('antialias', 2)
 
 #Custom color protein chains
