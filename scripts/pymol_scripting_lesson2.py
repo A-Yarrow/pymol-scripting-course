@@ -14,7 +14,7 @@ def ray_trace():
 def quality(anti_alias: int=4):
     cmd.set('antialias', anti_alias)#Set the anti-aliasing level to highest available
 
-def select_objects(active_site: list, protein: str):
+def select_objects(protein:str, active_site: list):
     objects = cmd.get_object_list()
     
     #check active site objects
@@ -35,11 +35,15 @@ def select_objects(active_site: list, protein: str):
         sys.exit()
 
 # ==== Main Execution ====
+#Pymol recieves all arguments as a string so need to parse it.
+def run_selection(arg_string, _self=None):
+    args = arg_string.split()
+    if len(args) < 2:
+        print("Usage: run_selection protein_name active_site1 active_site2 ...")
+        return
+    protein = args[0]
+    active_sites = args[1:]
+    print(f"Looking for {protein} and {active_sites}", flush=True)
+    select_objects(protein, active_sites)
 
-def run_selection():
-    active_site = ["1EMA_active_site_residues", "1EMA_organics"]
-    protein = "1EMA_A"
-    print(f'Looking for {active_site} and {protein}', flush=True)
-    select_objects(active_site, protein)
-    
 cmd.extend("run_selection", run_selection)
