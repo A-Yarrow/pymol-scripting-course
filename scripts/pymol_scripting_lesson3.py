@@ -32,7 +32,7 @@ def pymol_settings():
     cmd.set('ray_trace_slope_factor', 5) #Remove some shadow constrast
     cmd.set('antialias', ANTIALIAS)#Set the anti-aliasing level to highest available
 
-def transparent_figure(transparent_object:str, image_dir:str, pymol_view:str):
+def transparent_figure(protein:str, transparent_object:str, image_dir:str, pymol_view:str):
     """
     Inputs: Takes in the transparent objects, image dir as string and current/
     /n view as a string
@@ -45,11 +45,11 @@ def transparent_figure(transparent_object:str, image_dir:str, pymol_view:str):
     cmd.set('cartoon_transparency', TRANSPARENT_OBJECT_TRANSPARENCY)
     cmd.color(TRANSPARENT_OBJECT_COLOR, transparent_object)
 
-    image = os.path.join(image_dir, f'{transparent_object}_2')
+    image = os.path.join(image_dir, f'{protein}_1')
     cmd.set_view(pymol_view)
     cmd.png(image, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
     
-    image2 = os.path.join(image_dir, f'{transparent_object}_1')
+    image2 = os.path.join(image_dir, f'{protein}_2')
     cmd.set('cartoon_transparency', 0)
     cmd.set('ray_trace_mode', 2) #We don't need to set transparency on ray_trace_mode, 2
     cmd.set_view(pymol_view)
@@ -200,7 +200,7 @@ def run_selection(arg_string:str, _self=None):
     #Create the background protein figure
     protein_transparent_object = protein_figure(protein, resi_list, image_dir, CURRENT_VIEW)
     active_site_figure(protein, active_sites, image_dir, CURRENT_VIEW)
-    transparent_figure(transparent_object=protein_transparent_object, image_dir=image_dir, pymol_view=CURRENT_VIEW)
+    transparent_figure(protein=protein, transparent_object=protein_transparent_object, image_dir=image_dir, pymol_view=CURRENT_VIEW)
 
 cmd.extend("run_selection", run_selection)
 cmd.extend("get_selection_residues", get_selection_residues)
