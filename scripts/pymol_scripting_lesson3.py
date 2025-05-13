@@ -1,4 +1,4 @@
-from pymol import cmd
+from pymol import cmd, util
 import os
 import sys
 
@@ -7,33 +7,96 @@ Global settings. These can go in setting file
 For simplicity we will keep settings here
 In the future they can go in a settings.py file.
 """
+
+#Set Image Directory
+IMAGE_DIRECTORY = "//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts"
 #Image Settings
 WIDTH = 800
 HEIGHT = 600
 DPI = 300
-
+ANTIALIAS = 4
 #Immediately get the current view for picture taking
 CURRENT_VIEW = cmd.get_view()
 
-#https://pymol.org/dokuwiki/doku.php?id=setting:ray
-def ray_trace():
+#Set color for active site residues
+LIGAND_COLOR = 'limegreen'
+TRANSPARENT_OBJECT_COLOR = 'white'
+TRANSPARENT_OBJECT_TRANSPARENCY = 0.5
+SELECTION_NAME = 'sele'
 
-    cmd.set('ray_trace_mode', 2) #Black and white
+def pymol_settings():
+    #Ray trace and appearence settings
     cmd.set('ray_shadows', 0) #Remove shadows
     cmd.set('fog', 0) #Remove fog
     cmd.set('ray_trace_gain', 20) #Create a dark outline
     cmd.set('ray_trace_slope_factor', 5) #Remove some shadow constrast
+    cmd.set('antialias', ANTIALIAS)#Set the anti-aliasing level to highest available
 
-def quality(anti_alias: int=4):
-    cmd.set('antialias', anti_alias)#Set the anti-aliasing level to highest available
+def transparent_figure(transparent_object:str, image_dir:str, pymol_view:str):
+    """
+    Inputs: Takes in the transparent objects, image dir as string and current/
+    /n view as a string
+    Saves the transparent figure and the outline of the transparent figure.
+    """
+    cmd.hide("everything")
+    cmd.enable(transparent_object)
+    cmd.set('ray_trace_mode', 0) #In case you change the order of calling the figures.
+    cmd.show('cartoon', transparent_object)
+    cmd.set('cartoon_transparency', TRANSPARENT_OBJECT_TRANSPARENCY)
+    cmd.color(TRANSPARENT_OBJECT_COLOR, transparent_object)
+
+    image = os.path.join(image_dir, f'{transparent_object}_2')
+    cmd.set_view(pymol_view)
+    cmd.png(image, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
+    
+    image2 = os.path.join(image_dir, f'{transparent_object}_1')
+    cmd.set('cartoon_transparency', 0)
+    cmd.set('ray_trace_mode', 2) #We don't need to set transparency on ray_trace_mode, 2
+    cmd.set_view(pymol_view)
+    cmd.png(image2, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
+
+def active_site_figure(protein:str, active_site:list, image_dir:str, pymol_view:str):
+    """
+    Inputs: Active site as a string, image directory as a string, 
+    and the current view as a string
+    Saves a foreground active site image to the image directory
+    
+    """
+    cmd.hide('everything')
+    cmd.set('ray_trace_mode', 0)
+
+    if len(active_site) > 2:
+        print("You may choose at most, 2 active site objects \
+            \nThe first should be the ligand\
+            \nThe second should be the active site residues")
+        sys.exit()
+    
+    elif len(active_site) == 2:
+        residues = active_site[1]
+        cmd.enable(residues) #Makes sure that objects are not toggled off in the GUI
+        cmd.show('sticks', f'{residues} and not name n+o+c')
+        util.cbay(residues) #Better to set this color in global variables.
+
+    ligand = active_site[0]
+    cmd.enable(ligand) 
+    cmd.set('ray_opaque_background', 0)
+    cmd.color(LIGAND_COLOR, ligand)
+    cmd.show('spheres', ligand)
+    
+    image = os.path.join(image_dir, f'{protein}_3')
+    cmd.set_view(pymol_view)
+    cmd.png(image, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
+    print(f"Image saved as {image}")
+
 
 def protein_figure(protein:str, resi_list:list, image_dir:str, pymol_view:str):
     """
     Inputs: Protein as a string, list of selected residues, and 
     image directory as a string
     saves a foreground protein image to the image directory
-    Returns the camera/molecule view
+    Returns the string name of the object that will be in the foreground (transparent)
     """
+    cmd.set('ray_trace_mode', 2) #Black and white
     #Expand the selection (padded_resi) and covert lists to a string
     residue_string = "+".join(sorted(str(r) for r in resi_list))
     min_resi = max(1, resi_list[0]-2)
@@ -44,14 +107,14 @@ def protein_figure(protein:str, resi_list:list, image_dir:str, pymol_view:str):
     
     cmd.hide('everything')
     cmd.show('cartoon', f'{protein} and not resi {residue_string}')
-    cmd.create(f'{protein}_hide', f'{protein} and resi {expanded_residue_string}')
+    cmd.create(f'{protein}_transparent', f'{protein} and resi {expanded_residue_string}')
     cmd.set('ray_opaque_background', 1)
     cmd.set('bg_rgb', [1,1,1])
     image = os.path.join(image_dir, f'{protein}_4')
-    cmd.set_view(view)
+    cmd.set_view(pymol_view)
     cmd.png(image, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
     print(f"Image saved in {image}")
-    return view
+    return f'{protein}_transparent'
 
 def set_image_dir(image_dir:str=None):
     """
@@ -121,11 +184,8 @@ def select_objects(protein:str, active_site:list):
 # ==== Main Execution ====
 #Pymol recieves all arguments as a string so need to parse it.
 def run_selection(arg_string:str, _self=None):
-    """
-    Checks the selection
-    Input: string of protein, ligand, and residues (if entered) 
-    Returns: Protein String, list of active site. Ligand and active site residues
-    """
+
+    pymol_settings()
     args = arg_string.split()
     if len(args) < 2 or len(args) > 3:
         print("Usage: run_selection protein_name ligand residues ....")
@@ -135,13 +195,31 @@ def run_selection(arg_string:str, _self=None):
     print(f"Looking for {protein} and {active_sites}", flush=True)
     
     protein, active_site = select_objects(protein, active_sites)
-    resi_list = get_selection_residues(protein, selection_name='sele')
-    image_dir = set_image_dir()
+    resi_list = get_selection_residues(protein=protein, selection_name=SELECTION_NAME)
+    image_dir = set_image_dir(IMAGE_DIRECTORY)
     #Create the background protein figure
-    protein_figure(protein, resi_list, image_dir, CURRENT_VIEW)
+    protein_transparent_object = protein_figure(protein, resi_list, image_dir, CURRENT_VIEW)
+    active_site_figure(protein, active_sites, image_dir, CURRENT_VIEW)
+    transparent_figure(transparent_object=protein_transparent_object, image_dir=image_dir, pymol_view=CURRENT_VIEW)
 
-   
 cmd.extend("run_selection", run_selection)
 cmd.extend("get_selection_residues", get_selection_residues)
 cmd.extend("set_image_dir", set_image_dir)
 cmd.extend("protein_figure", protein_figure)
+cmd.extend("active_site_figure", active_site_figure)
+cmd.extend("transparent_figure", transparent_figure)
+cmd.extend("pymol_settings", pymol_settings)
+
+print(f"PyMOL script loaded. \
+      \n Select residues to hide and leave the selection labeled as {SELECTION_NAME} \
+      \n Usage: run_selection protein ligand residues \
+      \n residues argument is optional \
+      \n Remember to separate by a space (not a comma) like: \
+      \n run_selection 1EMA 1EMA_organics 1EMA_active_site_residues")
+
+#Function Tests:
+#protein_figure('1EMA_A', [195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#active_site_figure('1EMA_A', ['1EMA_organics', '1EMA_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#transparent_figure('1EMA_A_transparent', '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#If using lesson3_gfp.pse, the following should work:
+#run_selection 1EMA_A 1EMA_organics 1EMA_active_site_residues
