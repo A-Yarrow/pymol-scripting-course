@@ -7,7 +7,6 @@ set fog, 0
 set ray_trace_gain, 20
 set ray_trace_slope_factor, 5
 set antialias, 4
-#set hash_max, 300
 
 # Hide organics, water, and active site residues
 hide everything, 1EMA_organics
@@ -21,7 +20,7 @@ hide everything, hide
 create hide_object, 1EMA_A and resi 198-208 or 1EMA_A and resi 219-229
 hide everything, hide_object
 
-# Background Png
+# Background Protein Png
 set ray_opaque_background, 1
 set bg_rgb, [1,1,1]
 
@@ -35,26 +34,23 @@ set_view (\
 
 png C:\Users\yarro\pymol_stuff\images\gfp4, width=1700, height=2100, dpi=300, ray=1
 
-# Organics and active site residues Png
+# Organics and active site residues PNG
 hide everything, 1EMA_A
 set ray_opaque_background, 0
 show spheres, 1EMA_organics
 color limegreen, 1EMA_organics
 show sticks, 1EMA_active_site_residues and not name n+o+c
 set ray_trace_mode, 0
-#zoom 1EMA_A
 png C:\Users\yarro\pymol_stuff\images\gfp3, width=1700, height=2100, dpi=300, ray=1
 
-# Foreground residues
+# Foreground-1 PNG
 hide everything, 1EMA_organics or 1EMA_active_site_residues
 show cartoon, hide_object
 set ray_trace_mode, 2
-#zoom 1EMA_A
 png C:\Users\yarro\pymol_stuff\images\gfp2, width=1700, height=2100, dpi=300, ray=1
 
-# Foreground2
+# Foreground-2 PNG
 set ray_trace_mode, 0
 color white, hide_object
 set cartoon_transparency, 0.5, hide_object
-#zoom 1EMA_A
 png C:\Users\yarro\pymol_stuff\images\gfp1, width=1700, height=2100, dpi=300, ray=1
