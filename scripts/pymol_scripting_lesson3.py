@@ -9,7 +9,7 @@ In the future they can go in a settings.py file.
 """
 
 #Set Image Directory
-IMAGE_DIRECTORY = "//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts"
+IMAGE_DIRECTORY = None #Enter Directory you wnat to save images to e.g. "//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts"
 #Image Settings
 WIDTH = 800
 HEIGHT = 600
@@ -80,8 +80,11 @@ def active_site_figure(protein:str, active_site:list, image_dir:str, pymol_view:
     ligand = active_site[0]
     cmd.enable(ligand) 
     cmd.set('ray_opaque_background', 0)
-    cmd.color(LIGAND_COLOR, ligand)
+    #If user sets the ligand_color_off in the command line, the color will represent the GUI
+    if LIGAND_COLOR != None:
+        cmd.color(LIGAND_COLOR, ligand)
     cmd.show('spheres', ligand)
+    print(f"LIGAND_COLOR is now set to: {LIGAND_COLOR}")
     
     image = os.path.join(image_dir, f'{protein}_3')
     cmd.set_view(pymol_view)
@@ -184,14 +187,23 @@ def select_objects(protein:str, active_site:list):
 # ==== Main Execution ====
 #Pymol recieves all arguments as a string so need to parse it.
 def run_selection(arg_string:str, _self=None):
-
+    global LIGAND_COLOR
     pymol_settings()
     args = arg_string.split()
-    if len(args) < 2 or len(args) > 3:
-        print("Usage: run_selection protein_name ligand residues ....")
+    if len(args) < 2 or len(args) > 4:
+        print("Usage: run_selection protein_name ligand residues(optional) ligand_color_off(optional)")
         return
     protein = args[0]
-    active_sites = args[1:]
+    if len(args) == 3: 
+        active_sites = args[1:]
+    #Allow the user to turn automated ligand color off. Color will fall back to the GUI color.
+    elif len(args) == 4:
+        active_sites = args[1:3]
+        ligand_color_off = args[-1]
+        print(ligand_color_off)
+        if ligand_color_off == 'ligand_color_off':
+            LIGAND_COLOR = None
+
     print(f"Looking for {protein} and {active_sites}", flush=True)
     
     protein, active_site = select_objects(protein, active_sites)
@@ -202,6 +214,7 @@ def run_selection(arg_string:str, _self=None):
     active_site_figure(protein, active_sites, image_dir, CURRENT_VIEW)
     transparent_figure(protein=protein, transparent_object=protein_transparent_object, image_dir=image_dir, pymol_view=CURRENT_VIEW)
 
+cmd.extend("select_objects", select_objects)
 cmd.extend("run_selection", run_selection)
 cmd.extend("get_selection_residues", get_selection_residues)
 cmd.extend("set_image_dir", set_image_dir)
@@ -215,11 +228,24 @@ print(f"PyMOL script loaded. \
       \n Usage: run_selection protein ligand residues \
       \n residues argument is optional \
       \n Remember to separate by a space (not a comma) like: \
-      \n run_selection 1EMA 1EMA_organics 1EMA_active_site_residues")
+      \n e.g. run_selection 1EMA 1EMA_organics 1EMA_active_site_residues \
+      \n If you wish to set the ligand colors in the GUI add <ligand_color_off> \
+      \n to the end of the command: \
+      \n e.g. run_selection 1EMA 1EMA_organics 1EMA_active_site_residues ligand_color_off")
 
-#Function Tests:
+#Function Tests for PDB ID: 1EMA
+#select_objects('1EMA_A', ['1EMA_organics', '1EMA_active_site_residues'])
 #protein_figure('1EMA_A', [195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
 #active_site_figure('1EMA_A', ['1EMA_organics', '1EMA_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#active_site_figure('9COR_A', ['9COR_organics', '9COR_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
 #transparent_figure('1EMA_A_transparent', '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
 #If using lesson3_gfp.pse, the following should work:
 #run_selection 1EMA_A 1EMA_organics 1EMA_active_site_residues
+
+#Funciton Tests for PDB ID: 9COR
+#active_site_figure('9COR_A', ['9COR_organics', '9COR_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#run_selection 9COR_A 9COR_organics 9COR_active_site_residues
+#run_selection 9COR_A 9COR_organics 9COR_active_site_residues ligand_color_off
+
+#Test for PDB ID: 9AX6
+#run_selection protein 9AX6_organics 9AX6_active_site_residues ligand_color_off
