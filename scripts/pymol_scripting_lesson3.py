@@ -55,6 +55,9 @@ def transparent_figure(protein:str, transparent_object:str, image_dir:str, pymol
     cmd.set_view(pymol_view)
     cmd.png(image2, width=WIDTH, height=HEIGHT, dpi=DPI, ray=1)
 
+    print(f"Images saved in: {image} \
+          \n{image2}")
+
 def active_site_figure(protein:str, active_site:list, image_dir:str, pymol_view:str):
     """
     Inputs: Active site as a string, image directory as a string, 
@@ -129,6 +132,7 @@ def set_image_dir(image_dir:str=None):
     """
     if image_dir:
         if os.path.exists(image_dir):
+            print(f'Image directory set as: {image_dir}') 
             return image_dir
         else: 
             print(f"The directory: {image_dir} cannot be found, exiting")
@@ -214,7 +218,9 @@ def run_selection(arg_string:str, _self=None):
     active_site_figure(protein, active_sites, image_dir, CURRENT_VIEW)
     transparent_figure(protein=protein, transparent_object=protein_transparent_object, image_dir=image_dir, pymol_view=CURRENT_VIEW)
 
+# Register commands in PyMOL
 cmd.extend("select_objects", select_objects)
+cmd.extend("get_selection_residues", get_selection_residues)
 cmd.extend("run_selection", run_selection)
 cmd.extend("get_selection_residues", get_selection_residues)
 cmd.extend("set_image_dir", set_image_dir)
@@ -235,10 +241,12 @@ print(f"PyMOL script loaded. \
 
 #Function Tests for PDB ID: 1EMA
 #select_objects('1EMA_A', ['1EMA_organics', '1EMA_active_site_residues'])
+#get_selection_residues('1EMA_A', 'sele')
+#set_image_dir()
+#set_image_dir("//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts")
 #protein_figure('1EMA_A', [195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
 #active_site_figure('1EMA_A', ['1EMA_organics', '1EMA_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
-#active_site_figure('9COR_A', ['9COR_organics', '9COR_active_site_residues'], '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
-#transparent_figure('1EMA_A_transparent', '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
+#transparent_figure('1EMA_A', '1EMA_transparent', '//wsl.localhost/Ubuntu-24.04/home/yarrow/projects/pymol-scripting-course/media/lesson-3-py-scripts', cmd.get_view())
 #If using lesson3_gfp.pse, the following should work:
 #run_selection 1EMA_A 1EMA_organics 1EMA_active_site_residues
 
